@@ -22,9 +22,9 @@ func main() {
 	destDir = "./newvideos"
 	crf = 23
 	preset = ""
-	overwrite = false
+	overwrite = true
 
-	ffc.NewFFConvert(inDir, destDir, crf, preset, overwrite)
+	ffc.NewFFConvert(inDir, destDir, crf, preset, overwrite, 1)
 
 	if err := ffc.ConvertVideos(); err != nil {
 		log.Fatal(err)
