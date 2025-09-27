@@ -2,11 +2,17 @@ package ffconvert
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
+
+	"github.com/FFNormalMovies/ffconvert/linuxcliargs"
 )
 
 type FFConvert struct {
+	LCliA     linuxcliargs.LinuxCLICfg
+	BuildArgs []string
+
 	InDir  string
 	OutDir string
 
@@ -18,48 +24,16 @@ type FFConvert struct {
 	Crf       int
 	Preset    string
 	Overwrite bool
-
-	CLIArgs []string
 }
 
-func (ffc *FFConvert) NewFFConvert(inDir, outDir string, crf int, preset string, overwrite bool) {
+func (ffc *FFConvert) NewFFConvert(inDir, outDir string, crf int, preset string, overwrite bool, preMadeArg linuxcliargs.PremadeArgs) {
 	ffc.InDir = inDir
 	ffc.OutDir = outDir
 	ffc.Crf = crf
 	ffc.Preset = preset
 	ffc.Overwrite = overwrite
-}
 
-// NEED TO FULLY EXPAND THIS
-func (ffc *FFConvert) BuildCLIArgs() {
-	ffc.CLIArgs = []string{
-		"-i", ffc.InAbsDir,
-		"-c:v", "libx264",
-		"-preset", ffc.Preset,
-		"-crf", fmt.Sprint(ffc.Crf),
-		"-c:a", "aac",
-		"-b:a", "160k",
-	}
-
-	if ffc.Overwrite {
-		ffc.CLIArgs = append([]string{"-y"}, ffc.CLIArgs...)
-	} else {
-		ffc.CLIArgs = append([]string{"-n"}, ffc.CLIArgs...)
-	}
-
-	ffc.CLIArgs = append(ffc.CLIArgs, ffc.OutAbsDir)
-}
-
-func checkDirEntryForContinue(d os.DirEntry) bool {
-	if d.IsDir() {
-		return true
-	}
-
-	if d.Name() == ".DS_Store" {
-		return true
-	}
-
-	return false
+	ffc.LCliA = ffc.LCliA.SetPreMadeArg(preMadeArg)
 }
 
 func (ffc *FFConvert) ConvertVideos() (err error) {
@@ -75,8 +49,24 @@ func (ffc *FFConvert) ConvertVideos() (err error) {
 		}
 
 		if err = ffc.ConvertVideo(d.Name()); err != nil {
-			return err
+			return fmt.Errorf("error within ConvertVideo(): %s", err)
 		}
+	}
+
+	return nil
+}
+
+func (ffc *FFConvert) RunFFMpegCommand() (err error) {
+	if len(ffc.BuildArgs) == 0 {
+		return fmt.Errorf("empty args string failed: %s", err)
+	}
+
+	cmd := exec.Command("ffmpeg", ffc.BuildArgs...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	if err = cmd.Run(); err != nil {
+		return fmt.Errorf("cmdrun() ffmpeg failed: %w", err)
 	}
 
 	return nil
@@ -84,23 +74,40 @@ func (ffc *FFConvert) ConvertVideos() (err error) {
 
 func (ffc *FFConvert) ConvertVideo(currentFile string) (err error) {
 	if ffc.InAbsDir, ffc.OutAbsDir, err = getAllAbsolutePaths(ffc.InDir+currentFile, ffc.OutDir); err != nil {
-		return fmt.Errorf("error within getAllAbsolutePaths(): %s", ffc.InDir)
+		return fmt.Errorf("error within getallabsolutepaths(): %s", ffc.InDir)
 	}
 
-	ffc.OutAbsDir = generateOutPath(currentFile, ffc.OutAbsDir, ".mp4")
+	if ffc.OutAbsDir, err = generateOutPathArg(currentFile, ffc.OutAbsDir, ".mp4"); err != nil {
+		return fmt.Errorf("error within generateoutpatharg(): %s", err)
+	}
 
+	// LONGTERM NEED TO ADD OUTPUTFILE COUNTER FOR SAME FOLDER SUPPORT
 	if checkIfSameFilePath(ffc.InAbsDir, ffc.OutAbsDir) {
-		return fmt.Errorf("input and output resolve to the same file: %s", ffc.InAbsDir)
+		return fmt.Errorf("input file and output file resolve to the same file: %s", ffc.InAbsDir)
 	}
 
-	ffc.BuildCLIArgs()
+	if ffc.BuildArgs, err = ffc.LCliA.BuildLinuxCLIArgs(ffc.InAbsDir, ffc.OutAbsDir, ffc.Overwrite); err != nil {
+		return fmt.Errorf("error within buildlinuxcliargs(): %s", err)
+	}
 
-	cmd := exec.Command("ffmpeg", ffc.CLIArgs...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("ffmpeg failed: %w", err)
+	PrintLinuxCLIArgs(ffc.BuildArgs)
+
+	if err = ffc.RunFFMpegCommand(); err != nil {
+		return fmt.Errorf("error within runffmpegcommand(): %s", err)
 	}
 
 	return nil
+}
+
+// DEBUG FUNCTIONS
+func PrintLinuxCLIArgs(bArgs []string) {
+	log.Printf("LinuxCLIArgs() print start\n")
+	var newBArgs string
+
+	for _, s := range bArgs {
+		newBArgs += s
+	}
+
+	log.Printf("newBArgs: %v", bArgs)
+	log.Printf("\nLinuxCLIArgs() print stop\n")
 }

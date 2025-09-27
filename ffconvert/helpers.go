@@ -2,12 +2,13 @@ package ffconvert
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 )
 
-func getAllAbsolutePaths(inPath, outDir string) (inAbs, outAbs string, err error) {
-	if inAbs, err = filepath.Abs(inPath); err != nil {
-		return "", "", fmt.Errorf("absolute input error: %w", err)
+func getAllAbsolutePaths(inDir, outDir string) (inAbs, outAbs string, err error) {
+	if inAbs, err = filepath.Abs(inDir); err != nil {
+		return "", "", fmt.Errorf("absoulte indir error: %w", err)
 	}
 
 	if outAbs, err = filepath.Abs(outDir); err != nil {
@@ -17,11 +18,23 @@ func getAllAbsolutePaths(inPath, outDir string) (inAbs, outAbs string, err error
 	return
 }
 
-func generateOutPath(inAbs, destAbs string, fileExt string) string {
-	base := filepath.Base(inAbs)
+func generateOutPathArg(currentFile, destAbs string, fileExt string) (arg string, err error) {
+	if currentFile == "" {
+		err = fmt.Errorf("currentfile in empty")
+		return
+	} else if destAbs == "" {
+		err = fmt.Errorf("absolute destination empty")
+		return
+	} else if fileExt == "" {
+		err = fmt.Errorf("filext empty")
+		return
+	}
+
+	base := filepath.Base(currentFile)
 	ext := filepath.Ext(base)
 	name := base[:len(base)-len(ext)]
-	return filepath.Join(destAbs, name+fileExt)
+	arg = filepath.Join(destAbs, name+fileExt)
+	return
 }
 
 func checkIfSameFilePath(a, b string) bool {
@@ -37,4 +50,16 @@ func checkIfSameFilePath(a, b string) bool {
 	}
 
 	return ra == rb
+}
+
+func checkDirEntryForContinue(d os.DirEntry) bool {
+	if d.IsDir() {
+		return true
+	}
+
+	if d.Name() == ".DS_Store" {
+		return true
+	}
+
+	return false
 }
