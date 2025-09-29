@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/FFNormalMovies/ffconvert"
+	"github.com/BrandenWilliams/VHS/ffconvert"
 )
 
 func main() {

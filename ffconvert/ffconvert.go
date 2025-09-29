@@ -6,7 +6,7 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/FFNormalMovies/ffconvert/linuxcliargs"
+	"github.com/BrandenWilliams/VHS/ffconvert/linuxcliargs"
 )
 
 type FFConvert struct {
