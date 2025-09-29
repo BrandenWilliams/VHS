@@ -1,4 +1,8 @@
 VHS
-.DS_Store
-/newvideos
+/build
 /videos
+/newvideos
+/frontend/.vscode
+/frontend/node_modules
+/frontend/dist
+.DS_Store
