@@ -10,6 +10,7 @@ import (
 )
 
 type FFConvert struct {
+	PreSets   []linuxcliargs.PreSet
 	LCliA     linuxcliargs.LinuxCLICfg
 	BuildArgs []string
 
@@ -26,14 +27,32 @@ type FFConvert struct {
 	Overwrite bool
 }
 
-func (ffc *FFConvert) NewFFConvert(inDir, outDir string, crf int, preset string, overwrite bool, preMadeArg linuxcliargs.PremadeArgs) {
+func (ffc *FFConvert) SetPreSets() {
+	ffc.PreSets = ffc.LCliA.GetPreSets()
+}
+
+func (ffc *FFConvert) SetLinuxCLIConfig(preMadeArg linuxcliargs.PreSetArgs) (err error) {
+	for _, set := range ffc.PreSets {
+		if set.ID == preMadeArg {
+			ffc.LCliA = set.LCFG
+		}
+	}
+
+	return fmt.Errorf("linux cli config preset not found")
+}
+
+func (ffc *FFConvert) NewFFConvert(inDir, outDir string, crf int, preset string, overwrite bool, preMadeArg linuxcliargs.PreSetArgs) (err error) {
 	ffc.InDir = inDir
 	ffc.OutDir = outDir
 	ffc.Crf = crf
 	ffc.Preset = preset
 	ffc.Overwrite = overwrite
 
-	ffc.LCliA = ffc.LCliA.SetPreMadeArg(preMadeArg)
+	if err = ffc.SetLinuxCLIConfig(preMadeArg); err != nil {
+		return err
+	}
+
+	return
 }
 
 func (ffc *FFConvert) ConvertVideos() (err error) {
