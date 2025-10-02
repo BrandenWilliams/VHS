@@ -1,31 +1,33 @@
 package linuxcliargs
 
-type PremadeArgs int
+type PreSetArgs int
 
 const (
-	Libx264 PremadeArgs = iota
+	Libx264 PreSetArgs = iota
 	VTB264
 	SVTAV1
 	Libx265
 )
 
-func (cfg *LinuxCLICfg) SetPreMadeArg(pa PremadeArgs) LinuxCLICfg {
-	switch pa {
-	case Libx264:
-		return cfg.SetVcLibX264()
-	case VTB264:
-		return cfg.SetVTB264()
-	case SVTAV1:
-		return cfg.SetSVTAV1()
-	case Libx265:
-		return cfg.SetLibx265()
-	default:
-		return cfg.SetLibx265()
-	}
+type PreSet struct {
+	ID   PreSetArgs
+	Name string
+	LCFG LinuxCLICfg
 }
 
-func (cfg *LinuxCLICfg) SetVcLibX264() LinuxCLICfg {
-	return LinuxCLICfg{
+func (cfg *LinuxCLICfg) GetPreSets() []PreSet {
+	var preSets []PreSet
+
+	preSets = append(preSets, setVcLibX264())
+	preSets = append(preSets, setVTB264())
+	preSets = append(preSets, setSVTAV1())
+	preSets = append(preSets, setLibx265())
+
+	return preSets
+}
+
+func setVcLibX264() PreSet {
+	newConfig := LinuxCLICfg{
 		VCodec:       VcLibx264,
 		Mode:         RcCRF,
 		CRF:          20,
@@ -35,10 +37,16 @@ func (cfg *LinuxCLICfg) SetVcLibX264() LinuxCLICfg {
 		Container:    Mp4,
 		PixFmt:       "yuv420p",
 	}
+
+	return PreSet{
+		ID:   Libx264,
+		Name: "libx264",
+		LCFG: newConfig,
+	}
 }
 
-func (cfg *LinuxCLICfg) SetVTB264() LinuxCLICfg {
-	return LinuxCLICfg{
+func setVTB264() PreSet {
+	newConfig := LinuxCLICfg{
 		VCodec:       VcVTB264,
 		Mode:         RcABR,
 		VBitrate:     "5000k",
@@ -47,10 +55,16 @@ func (cfg *LinuxCLICfg) SetVTB264() LinuxCLICfg {
 		Container:    Mp4,
 		PixFmt:       "yuv420p",
 	}
+
+	return PreSet{
+		ID:   VTB264,
+		Name: "vtb264",
+		LCFG: newConfig,
+	}
 }
 
-func (cfg *LinuxCLICfg) SetSVTAV1() LinuxCLICfg {
-	return LinuxCLICfg{
+func setSVTAV1() PreSet {
+	newConfig := LinuxCLICfg{
 		VCodec:       VcSVTAV1,
 		Mode:         RcCQ,
 		CQ:           30,
@@ -60,10 +74,16 @@ func (cfg *LinuxCLICfg) SetSVTAV1() LinuxCLICfg {
 		Container:    Mp4,
 		PixFmt:       "yuv420p",
 	}
+
+	return PreSet{
+		ID:   SVTAV1,
+		Name: "svtav1",
+		LCFG: newConfig,
+	}
 }
 
-func (cfg *LinuxCLICfg) SetLibx265() LinuxCLICfg {
-	return LinuxCLICfg{
+func setLibx265() PreSet {
+	newConfig := LinuxCLICfg{
 		VCodec:       VcLibx265,
 		Mode:         RcCRF,
 		CRF:          22,
@@ -72,5 +92,11 @@ func (cfg *LinuxCLICfg) SetLibx265() LinuxCLICfg {
 		AudioBitrate: "160k",
 		Container:    Mp4,
 		PixFmt:       "yuv420p",
+	}
+
+	return PreSet{
+		ID:   Libx265,
+		Name: "libx265",
+		LCFG: newConfig,
 	}
 }
