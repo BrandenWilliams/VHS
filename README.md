@@ -1,1 +1,1 @@
-VHS (Video Harmonization System) - Wails GUI coming soon - currently just a go wrapper around FFMpeg
+VHS (Video Harmonization System) - currently just a go wrapper around FFMpeg
