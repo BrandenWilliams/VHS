@@ -12,8 +12,8 @@ import (
 type App struct {
 	ctx context.Context
 
-	ffc     ffconvert.FFConvert
-	preSets []linuxcliargs.PreSet
+	ffc ffconvert.FFConvert
+	PS  []linuxcliargs.PreSet
 }
 
 func NewApp() *App {
@@ -21,7 +21,7 @@ func NewApp() *App {
 }
 
 func (a *App) getPreSets() {
-	a.preSets = a.ffc.LCliA.GetPreSets()
+	a.PS = a.ffc.LCliA.GetPreSets()
 }
 
 // startup is called when the app starts. The context is saved
@@ -35,4 +35,8 @@ func (a *App) startup(ctx context.Context) {
 // DELETE LONG TERM
 func (a *App) Greet(name string) string {
 	return fmt.Sprintf("Hello %s, It's show time!", name)
+}
+
+func (a *App) PreSets() []linuxcliargs.PreSet {
+	return a.PS
 }

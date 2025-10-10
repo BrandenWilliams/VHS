@@ -39,35 +39,36 @@ const (
 )
 
 type LinuxCLICfg struct {
-	VCodec    VideoCodec
-	ACodec    AudioCodec
-	Container Container
+	VCodec    VideoCodec `json:"vcodec" form:"vcodec"`
+	ACodec    AudioCodec `json:"acodec" form:"acodec"`
+	Container Container  `json:"container" form:"container"`
 
 	// rate control
-	Mode     RateControlMode
-	CRF      int
-	CQ       int
-	VBitrate string
-	Maxrate  string
-	Bufsize  string
+	Mode RateControlMode `json:"mode" form:"mode"`
+
+	CRF      int    `json:"crf" form:"crf"`
+	CQ       int    `json:"cq" form:"cq"`
+	VBitrate string `json:"vbitrate" form:"vbitrate"`
+	Maxrate  string `json:"maxrate" form:"maxrate"`
+	Bufsize  string `json:"buffsize" form:"buffsize"`
 
 	// x264 x265 specific args
-	Preset  string
-	Tune    string
-	Profile string
-	Level   string
+	Preset  string `json:"preset" form:"preset"`
+	Tune    string `json:"tune" form:"tune"`
+	Profile string `json:"profile" form:"profile"`
+	Level   string `json:"level" form:"level"`
 
 	//extras
-	PixFmt       string
-	Scale        string
-	Fps          string
-	AudioBitrate string
-	AudioCh      int
-	AudioRate    int
+	PixFmt       string `json:"pixfmt" form:"pixfmt"`
+	Scale        string `json:"scale" form:"scale"`
+	Fps          string `json:"fps" form:"fps"`
+	AudioBitrate string `json:"audiobitrate" form:"audiobitrate"`
+	AudioCh      int    `json:"audoch" form:"audoch"`
+	AudioRate    int    `json:"audiorate" form:"audiorate"`
 
-	ExtraInputArgs  []string
-	ExtraFilterArgs []string
-	ExtraOutputArgs []string
+	ExtraInputArgs  []string `json:"extrainputargs" form:"extrainputargs"`
+	ExtraFilterArgs []string `json:"extrafilterargs" form:"extrafilterargs"`
+	ExtraOutputArgs []string `json:"extraoutputargs" form:"extraoutputargs"`
 }
 
 func (lca *LinuxCLICfg) BuildLinuxCLIArgs(inPath, outPath string, overwrite bool) (args []string, err error) {

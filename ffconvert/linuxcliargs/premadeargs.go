@@ -10,9 +10,9 @@ const (
 )
 
 type PreSet struct {
-	ID   PreSetArgs
-	Name string
-	LCFG LinuxCLICfg
+	ID   PreSetArgs  `json:"id" form:"id"`
+	Name string      `json:"name" form:"name"`
+	LCFG LinuxCLICfg `json:"lcfg" form:"lcfg"`
 }
 
 func (cfg *LinuxCLICfg) GetPreSets() []PreSet {
