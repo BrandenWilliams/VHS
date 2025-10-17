@@ -3,30 +3,21 @@ package main
 import (
 	"log"
 
-	"github.com/FFNormalMovies/ffconvert"
+	"github.com/BrandenWilliams/VHS/ffconvert"
+	"github.com/BrandenWilliams/VHS/flagparse"
 )
 
 func main() {
 	var (
+		fp  flagparse.FlagParse
 		ffc ffconvert.FFConvert
-
-		// test vars
-		inDir     string
-		destDir   string
-		crf       int
-		preset    string
-		overwrite bool
 	)
 
-	inDir = "./videos/"
-	destDir = "./newvideos"
-	crf = 23
-	preset = ""
-	overwrite = true
+	if err := fp.FlagParse(); err != nil {
+		log.Fatal(err)
+	}
 
-	ffc.NewFFConvert(inDir, destDir, crf, preset, overwrite, 1)
-
-	if err := ffc.ConvertVideos(); err != nil {
+	if err := ffc.FFConvert(*fp.In, *fp.Out, *fp.Preset, *fp.Overwrite); err != nil {
 		log.Fatal(err)
 	}
 }
