@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 )
 
 type FlagParse struct {
@@ -45,6 +46,16 @@ func (fp *FlagParse) checkFlags() (err error) {
 		return
 	}
 
+	if strings.HasPrefix(in, "/") || strings.HasPrefix(out, "/") {
+		printAbsoluteDirectory()
+		os.Exit(1)
+	}
+
+	if !strings.HasSuffix(in, "/") || !strings.HasSuffix(out, "/") {
+		printAbsoluteDirectory()
+		os.Exit(1)
+	}
+
 	return nil
 }
 
@@ -56,7 +67,7 @@ func (fp *FlagParse) FlagParse() (err error) {
 	if err := fp.checkFlags(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		flag.Usage()
-		os.Exit(2) // 2 = usage error
+		os.Exit(1)
 	}
 
 	return
