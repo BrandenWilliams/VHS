@@ -28,7 +28,7 @@ func (fp *FlagParse) defineFlags() {
 	}
 }
 
-func (fp *FlagParse) checkFlags() (err error) {
+func (fp *FlagParse) validateFlags() (err error) {
 	if flag.NArg() > 0 {
 		return fmt.Errorf("unexpected arguments: %v", flag.Args())
 	}
@@ -46,12 +46,9 @@ func (fp *FlagParse) checkFlags() (err error) {
 		return
 	}
 
-	if strings.HasPrefix(in, "/") || strings.HasPrefix(out, "/") {
-		printAbsoluteDirectory()
-		os.Exit(1)
-	}
+	if strings.HasPrefix(in, "/") || strings.HasPrefix(out, "/") ||
+		!strings.HasSuffix(in, "/") || !strings.HasSuffix(out, "/") {
 
-	if !strings.HasSuffix(in, "/") || !strings.HasSuffix(out, "/") {
 		printAbsoluteDirectory()
 		os.Exit(1)
 	}
@@ -64,7 +61,7 @@ func (fp *FlagParse) FlagParse() (err error) {
 
 	flag.Parse()
 
-	if err := fp.checkFlags(); err != nil {
+	if err := fp.validateFlags(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		flag.Usage()
 		os.Exit(1)
