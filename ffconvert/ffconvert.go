@@ -25,7 +25,7 @@ type FFConvert struct {
 	Overwrite bool
 }
 
-func (ffc *FFConvert) NewFFConvert(inDir, outDir string, preMadeArg int, overwrite bool) {
+func (ffc *FFConvert) newFFConvert(inDir, outDir string, preMadeArg int, overwrite bool) {
 	ffc.InDir = inDir
 	ffc.OutDir = outDir
 	ffc.Overwrite = overwrite
@@ -114,11 +114,13 @@ func (ffc *FFConvert) ConvertFolderOfVideos() (err error) {
 	return
 }
 
-func (ffc *FFConvert) FFConvert() (err error) {
+func (ffc *FFConvert) FFConvert(inDir, outDir string, preMadeArg int, overwrite bool) (err error) {
 	var (
 		inAbs string
 		info  os.FileInfo
 	)
+
+	ffc.newFFConvert(inDir, outDir, preMadeArg, overwrite)
 
 	if inAbs, err = filepath.Abs(ffc.InDir); err != nil {
 		err = fmt.Errorf("error getting abs filepath ffconvert(): %w", err)

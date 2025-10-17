@@ -13,12 +13,11 @@ func main() {
 		ffc ffconvert.FFConvert
 	)
 
-	fp.FlagParse()
+	if err := fp.FlagParse(); err != nil {
+		log.Fatal(err)
+	}
 
-	overwrite := true
-	ffc.NewFFConvert(*fp.In, *fp.Out, *fp.Preset, overwrite)
-
-	if err := ffc.FFConvert(); err != nil {
+	if err := ffc.FFConvert(*fp.In, *fp.Out, *fp.Preset, *fp.Overwrite); err != nil {
 		log.Fatal(err)
 	}
 }

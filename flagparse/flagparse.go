@@ -9,6 +9,7 @@ import (
 type FlagParse struct {
 	In          *string
 	Out         *string
+	Overwrite   *bool
 	PrintPreset *bool
 	Preset      *int
 }
@@ -16,6 +17,7 @@ type FlagParse struct {
 func (fp *FlagParse) defineFlags() {
 	fp.In = flag.String("in", "", "input file (required)")
 	fp.Out = flag.String("out", "", "output file (required)")
+	fp.Overwrite = flag.Bool("overwrite", false, "overwrite files(false by default)")
 	fp.PrintPreset = flag.Bool("printPresets", false, "print out preset list")
 	fp.Preset = flag.Int("ps", 0, "preset selection")
 
