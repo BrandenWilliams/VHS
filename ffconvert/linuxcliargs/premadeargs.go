@@ -9,15 +9,15 @@ const (
 	Libx265
 )
 
-func (cfg *LinuxCLICfg) SetPreMadeArg(pa PremadeArgs) LinuxCLICfg {
+func (cfg *LinuxCLICfg) SetPreMadeArg(pa int) LinuxCLICfg {
 	switch pa {
-	case Libx264:
+	case int(Libx264):
 		return cfg.SetVcLibX264()
-	case VTB264:
+	case int(VTB264):
 		return cfg.SetVTB264()
-	case SVTAV1:
+	case int(SVTAV1):
 		return cfg.SetSVTAV1()
-	case Libx265:
+	case int(Libx265):
 		return cfg.SetLibx265()
 	default:
 		return cfg.SetLibx265()

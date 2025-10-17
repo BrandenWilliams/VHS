@@ -2,9 +2,9 @@ package ffconvert
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 
 	"github.com/BrandenWilliams/VHS/ffconvert/linuxcliargs"
 )
@@ -22,21 +22,75 @@ type FFConvert struct {
 	CurrentFile string
 
 	Crf       int
-	Preset    string
 	Overwrite bool
 }
 
-func (ffc *FFConvert) NewFFConvert(inDir, outDir string, crf int, preset string, overwrite bool, preMadeArg linuxcliargs.PremadeArgs) {
+func (ffc *FFConvert) NewFFConvert(inDir, outDir string, preMadeArg int, overwrite bool) {
 	ffc.InDir = inDir
 	ffc.OutDir = outDir
-	ffc.Crf = crf
-	ffc.Preset = preset
 	ffc.Overwrite = overwrite
 
 	ffc.LCliA = ffc.LCliA.SetPreMadeArg(preMadeArg)
 }
 
-func (ffc *FFConvert) ConvertVideos() (err error) {
+func runFFMpegCommand(buildArgs []string) (err error) {
+	cmd := exec.Command("ffmpeg", buildArgs...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	if err = cmd.Run(); err != nil {
+		return fmt.Errorf("cmdrun() ffmpeg failed: %w", err)
+	}
+
+	return nil
+}
+
+func (ffc *FFConvert) ConvertFolderVideoPrep(currentFile string) (err error) {
+	if ffc.InAbsDir, ffc.OutAbsDir, err = getAllAbsolutePaths(ffc.InDir+currentFile, ffc.OutDir); err != nil {
+		return fmt.Errorf("error within getallabsolutepaths(): %s", ffc.InDir)
+	}
+
+	if ffc.OutAbsDir, err = generateOutPathArg(currentFile, ffc.OutAbsDir, ".mp4"); err != nil {
+		return fmt.Errorf("error within generateoutpatharg(): %s", err)
+	}
+
+	return nil
+}
+
+func (ffc *FFConvert) ConvertVideoPrep() (err error) {
+	ffc.InAbsDir = ffc.InDir
+	ffc.OutAbsDir = ffc.OutDir
+
+	return
+}
+
+func (ffc *FFConvert) ConvertVideo() (err error) {
+	if checkIfSameFilePath(ffc.InAbsDir, ffc.OutAbsDir) {
+		return fmt.Errorf("input file and output file resolve to the same file: %s", ffc.InAbsDir)
+	}
+
+	if ffc.BuildArgs, err = ffc.LCliA.BuildLinuxCLIArgs(ffc.InAbsDir, ffc.OutAbsDir, ffc.Overwrite); err != nil {
+		return fmt.Errorf("error within buildlinuxcliargs(): %s", err)
+	}
+
+	if err = runFFMpegCommand(ffc.BuildArgs); err != nil {
+		return fmt.Errorf("error within runffmpegcommand(): %s", err)
+	}
+
+	return
+}
+
+func (ffc *FFConvert) ConvertSingleVideo() (err error) {
+	ffc.ConvertVideoPrep()
+
+	if err = ffc.ConvertVideo(); err != nil {
+		return fmt.Errorf("error within ConvertVideo(): %s", err)
+	}
+
+	return
+}
+
+func (ffc *FFConvert) ConvertFolderOfVideos() (err error) {
 	var dir []os.DirEntry
 
 	if dir, err = os.ReadDir(ffc.InDir); err != nil {
@@ -48,66 +102,39 @@ func (ffc *FFConvert) ConvertVideos() (err error) {
 			continue
 		}
 
-		if err = ffc.ConvertVideo(d.Name()); err != nil {
+		if err = ffc.ConvertFolderVideoPrep(d.Name()); err != nil {
+			return fmt.Errorf("error within ConvertVideosPrep(): %s", err)
+		}
+
+		if err = ffc.ConvertVideo(); err != nil {
 			return fmt.Errorf("error within ConvertVideo(): %s", err)
 		}
 	}
 
-	return nil
+	return
 }
 
-func (ffc *FFConvert) RunFFMpegCommand() (err error) {
-	if len(ffc.BuildArgs) == 0 {
-		return fmt.Errorf("empty args string failed: %s", err)
+func (ffc *FFConvert) FFConvert() (err error) {
+	var (
+		inAbs string
+		info  os.FileInfo
+	)
+
+	if inAbs, err = filepath.Abs(ffc.InDir); err != nil {
+		err = fmt.Errorf("error getting abs filepath ffconvert(): %w", err)
+		return
 	}
 
-	cmd := exec.Command("ffmpeg", ffc.BuildArgs...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	if err = cmd.Run(); err != nil {
-		return fmt.Errorf("cmdrun() ffmpeg failed: %w", err)
+	if info, err = os.Stat(inAbs); err != nil {
+		fmt.Println("os.Stat error: ", err)
+		return
 	}
 
-	return nil
-}
-
-func (ffc *FFConvert) ConvertVideo(currentFile string) (err error) {
-	if ffc.InAbsDir, ffc.OutAbsDir, err = getAllAbsolutePaths(ffc.InDir+currentFile, ffc.OutDir); err != nil {
-		return fmt.Errorf("error within getallabsolutepaths(): %s", ffc.InDir)
-	}
-
-	if ffc.OutAbsDir, err = generateOutPathArg(currentFile, ffc.OutAbsDir, ".mp4"); err != nil {
-		return fmt.Errorf("error within generateoutpatharg(): %s", err)
-	}
-
-	// LONGTERM NEED TO ADD OUTPUTFILE COUNTER FOR SAME FOLDER SUPPORT
-	if checkIfSameFilePath(ffc.InAbsDir, ffc.OutAbsDir) {
-		return fmt.Errorf("input file and output file resolve to the same file: %s", ffc.InAbsDir)
-	}
-
-	if ffc.BuildArgs, err = ffc.LCliA.BuildLinuxCLIArgs(ffc.InAbsDir, ffc.OutAbsDir, ffc.Overwrite); err != nil {
-		return fmt.Errorf("error within buildlinuxcliargs(): %s", err)
-	}
-
-	PrintLinuxCLIArgs(ffc.BuildArgs)
-
-	if err = ffc.RunFFMpegCommand(); err != nil {
-		return fmt.Errorf("error within runffmpegcommand(): %s", err)
+	if info.IsDir() {
+		ffc.ConvertFolderOfVideos()
+	} else {
+		ffc.ConvertSingleVideo()
 	}
 
 	return nil
-}
-
-// DEBUG FUNCTIONS
-func PrintLinuxCLIArgs(bArgs []string) {
-	log.Printf("LinuxCLIArgs() print start\n")
-	var newBArgs string
-
-	for _, s := range bArgs {
-		newBArgs += s
-	}
-
-	log.Printf("newBArgs: %v", bArgs)
-	log.Printf("\nLinuxCLIArgs() print stop\n")
 }
