@@ -23,3 +23,8 @@ func printUsage() {
 		"4) Libx265\n\n" +
 		"Default Flags:\n")
 }
+
+func printAbsoluteDirectory() {
+	fmt.Printf("use absolute directory instead of relative\n" +
+		"Use DIR/ or ./DIR/")
+}
